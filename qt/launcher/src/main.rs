@@ -667,6 +667,8 @@ fn fetch_versions(state: &State) -> Result<Vec<String>> {
 
     let mut cmd = Command::new(&state.uv_path);
     cmd.current_dir(&state.uv_install_root)
+        .env("UV_PYTHON_INSTALL_DIR", &state.uv_python_install_dir)
+        .env("UV_CACHE_DIR", &state.uv_cache_dir)
         .args(["run", "--no-project", "--no-config", "--managed-python"])
         .args(["--with", "pip-system-certs,requests[socks]"]);
 
@@ -679,6 +681,10 @@ fn fetch_versions(state: &State) -> Result<Vec<String>> {
     }
 
     cmd.arg(&versions_script);
+
+    if state.no_cache_marker.exists() {
+        cmd.env("UV_NO_CACHE", "1");
+    }
 
     // Add mirror environment variable if enabled
     if let Some((python_mirror, pypi_mirror)) = get_mirror_urls(state)? {
